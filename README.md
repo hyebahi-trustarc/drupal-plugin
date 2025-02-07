@@ -1,3 +1,5 @@
+Save trustarc folder under 
+/var/www/html/modules/contrib/
 ```
 services:
   drupal:
