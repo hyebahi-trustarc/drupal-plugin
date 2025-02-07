@@ -1,3 +1,4 @@
+```
 services:
   drupal:
     image: drupal:10
@@ -31,3 +32,4 @@ services:
 volumes:
   drupal_data:
   db_data:
+```
