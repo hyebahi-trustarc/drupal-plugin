@@ -1,0 +1,4 @@
+trustarc.admin.header:
+  route_name: trustarc.admin.header
+  title: 'TrustArc'
+  base_route: trustarc.admin.header

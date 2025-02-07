@@ -1,0 +1,7 @@
+trustarc.admin.header:
+  path: '/admin/config/development/trustarc'
+  defaults:
+    _form: '\Drupal\trustarc\Form\TrustarcSettingsForm'
+    _title: 'Simplify Cookie Consent Integration with TrustArc'
+  requirements:
+    _permission: 'trustarc_setup'

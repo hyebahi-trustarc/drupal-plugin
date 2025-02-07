@@ -1,0 +1,4 @@
+trustarc_settings:
+  title: 'TrustArc'
+  description: 'Simplify Cookie Consent Integration with TrustArc'
+  restrict access: TRUE
