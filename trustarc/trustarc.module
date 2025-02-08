@@ -4,63 +4,95 @@ use Drupal\Core\Cache\Cache;
 use Drupal\filter\FilterPluginCollection;
 use Drupal\Core\Template\Attribute;
 
-/**
- * Implements hook_page_attachments_alter().
- */
 function trustarc_page_attachments_alter(array &$page) {
+  \Drupal::logger('trustarc')->notice('trustarc_page_attachments_alter() executed');
+
   $config = \Drupal::config('trustarc.settings');
   $cmp_version = $config->get('cmp_version', 'advanced');
   $cmp_script = $config->get('cmp_script');
   $cmp_script_params = $config->get('cmp_script_params');
-
+  $cmp_preferences_selector = $config->get('cmp_preferences_selector');
+  $cmp_preferences = $config->get('cmp_preferences');
   if (empty($cmp_script)) {
     return;
   }
 
   $hostname = 'https://consent.trustarc.com';
-  if ($cmp_version == 'advanced') {
-    $separator = '';
-    if (!empty($cmp_script_params)) {
-      if (strpos($cmp_script_params, '&') !== 0) {  // Check if & is the first char
+  $separator = '';
+
+  if (!empty($cmp_script_params)) {
+    if ($cmp_version == 'advanced') {
+      if (strpos($cmp_script_params, '&') !== 0) { 
         $separator = '&';
       }
-    }
-    $script_url = $hostname . "/notice?domain=" . $cmp_script . $separator . $cmp_script_params;
-  } else { // Pro version
-    $separator = '';
-    if (!empty($cmp_script_params)) {
-      if (strpos($cmp_script_params, '?') !== 0) { // Check if ? is the first char
+      $script_url = $hostname . "/notice?domain=" . $cmp_script . $separator . $cmp_script_params;
+    } else { // Pro version
+      if (strpos($cmp_script_params, '?') !== 0) { 
         $separator = '?';
       }
+      $script_url = $hostname . "/v2/notice/" . $cmp_script . $separator . $cmp_script_params;
     }
-    $script_url = $hostname . "/v2/notice/" . $cmp_script . $separator . $cmp_script_params;
+  } else {
+    $script_url = $hostname . ($cmp_version == 'advanced' ? "/notice?domain=" : "/v2/notice/") . $cmp_script;
   }
 
-  $trustarc = [
+  // Inject TrustArc script
+  $trustarc_script = [
     '#type' => 'html_tag',
     '#tag' => 'script',
     '#attributes' => [
       'id' => 'trustarc-cmp',
       'type' => 'text/javascript',
       'src' => $script_url,
-      'async' => 'async',
+      'defer' => 'defer',
     ],
   ];
 
-  array_unshift($page['#attached']['html_head'], [$trustarc, 'trustarc']);
+
+  if (!empty($cmp_preferences)) {
+
+    // JavaScript to dynamically inject the div in the specified location
+    $trustarc_div_script = [
+      '#type' => 'html_tag',
+      '#tag' => 'script',
+      '#value' => "
+        document.addEventListener('DOMContentLoaded', function() {
+          var targetElement = document.querySelector('$cmp_preferences_selector');
+          if (targetElement) {
+            var trustarcDiv = document.createElement('div');
+           trustarcDiv.id = 'teconsent';
+           trustarcDiv.className = 'trustarc-container';
+           targetElement.appendChild(trustarcDiv);
+           console.log('TrustArc div injected into:', targetElement);
+          } else {
+            console.warn('TrustArc target element not found:', '$cmp_target_selector');
+          }
+        });
+      ",
+    ];
+  }
+  // Ensure 'html_head' array exists
+  if (!isset($page['#attached']['html_head'])) {
+    $page['#attached']['html_head'] = [];
+  }
+
+  array_unshift($page['#attached']['html_head'], [$trustarc_script, 'trustarc_script']);
 
 
-
+  if (!empty($cmp_preferences)) {
+    array_unshift($page['#attached']['html_head'], [$trustarc_div_script, 'trustarc_div_script']);
+  }
 }
 
-
+/**
+ * Injects a TrustArc banner div.
+ */
 function trustarc_page_top(array &$page_top) {
   $config = \Drupal::config('trustarc.settings');
   $cmp_banner = $config->get('cmp_banner', 'consent_blackbar'); // Default ID
 
-  if ($cmp_banner) {
-
-      $custom_div = [
+  if (!empty($cmp_banner)) {
+    $page_top['trustarc'] = [
       '#type' => 'html_tag',
       '#tag' => 'div',
       '#attributes' => [
@@ -68,7 +100,6 @@ function trustarc_page_top(array &$page_top) {
       ],
       '#value' => '',
     ];
-   $page_top['trustarc'] = $custom_div;
   }
 }
 
@@ -83,16 +114,6 @@ function trustarc_page_top_alter(array &$page_top) {
  * Implements hook_node_view().
  */
 function trustarc_node_view(array &$build) {
-  $config = \Drupal::config('trustarc.settings');
-  $cmp_preferences = $config->get('cmp_preferences');
-  $cmp_preferences_selector = $config->get('cmp_preferences_selector');
-
-  if ($cmp_preferences) {
-    $build['trustarc'][] = [
-      '#theme' => 'trustarc_preferences',
-      '#cmp_preferences_selector' => $cmp_preferences_selector,
-    ];
-  }
 }
 
 /**
@@ -101,3 +122,4 @@ function trustarc_node_view(array &$build) {
 function trustarc_node_view_alter(array &$build) {
   trustarc_node_view($build);
 }
+
