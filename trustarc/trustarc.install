@@ -10,6 +10,6 @@
  */
 function trustarc_uninstall() {
   \Drupal::service('config.factory')
-    ->getEditable('trustarc.settings')
+    ->getEditable('trustarc.admin.header')
     ->delete();
 }
