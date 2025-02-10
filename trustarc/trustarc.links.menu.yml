@@ -1,5 +1,5 @@
 trustarc.admin.header:
   title: 'TrustArc'
-  description: 'Simplify Cookie Consent Integration with TrustArc'
+  description: 'Provides integration with TrustArc for cookie consent management.'
   parent: system.admin_config_development
   route_name: trustarc.admin.header

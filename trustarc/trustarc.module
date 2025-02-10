@@ -85,8 +85,7 @@ function trustarc_preprocess_html(array &$variables) {
   $cmp_url_passthrough = $config->get('cmp_url_passthrough');
   $cmp_consent_type_mapping = $config->get('cmp_consent_type_mapping');
   $cmp_ga_implied_location = $config->get('cmp_ga_implied_location');
-  //$wait_for_update = isset($cmp_consent_type_mapping['wait_for_update']) ? $cmp_consent_type_mapping['wait_for_update']['trustarc_category_id'] : NULL;
-  //unset($cmp_consent_type_mapping['wait_for_update']);
+
 
   // Attach the library only once per page render.
   if (empty($variables['#attached']['library']['trustarc/trustarc_js'])) {

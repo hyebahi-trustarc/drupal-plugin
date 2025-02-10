@@ -3,5 +3,3 @@ description: A plugin to configure and inject TrustArc CMP script along with ban
 type: module
 package: Custom
 core_version_requirement: ^8.8 || ^9 || ^10
-templates:
-  - trustarc-preferences
