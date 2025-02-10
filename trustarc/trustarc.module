@@ -84,6 +84,7 @@ function trustarc_preprocess_html(array &$variables) {
   $cmp_ads_data_redaction = $config->get('cmp_ads_data_redaction');
   $cmp_url_passthrough = $config->get('cmp_url_passthrough');
   $cmp_consent_type_mapping = $config->get('cmp_consent_type_mapping');
+  $cmp_ga_implied_location = $config->get('cmp_ga_implied_location');
   //$wait_for_update = isset($cmp_consent_type_mapping['wait_for_update']) ? $cmp_consent_type_mapping['wait_for_update']['trustarc_category_id'] : NULL;
   //unset($cmp_consent_type_mapping['wait_for_update']);
 
@@ -103,6 +104,7 @@ function trustarc_preprocess_html(array &$variables) {
       'gaMeasurementID' => $cmp_ga_measurement_id,
       'adsDataRedaction' => $cmp_ads_data_redaction,
       'URLPassthrough' => $cmp_url_passthrough,
+      'impliedLocation' => $cmp_ga_implied_location,
       'consentTypeMapping' => \Drupal\Component\Serialization\Json::encode($cmp_consent_type_mapping, JSON_NUMERIC_CHECK),
     ];
   }

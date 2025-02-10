@@ -28,8 +28,8 @@
             gtag('config', trustarc.gaMeasurementID);
         }
 
-        gtag('set', 'ads_data_redaction', trustarc.adsDataRedaction === 'true');
-        gtag('set', 'url_passthrough', trustarc.URLPassthrough === 'true');
+        gtag('set', 'ads_data_redaction', trustarc.adsDataRedaction == 1);
+        gtag('set', 'url_passthrough', trustarc.URLPassthrough == 1);
 
         // Consent Mode Status
         const ConsentType = {
@@ -42,19 +42,24 @@
         // Bucket Mapping
         const consentTypesMapped = JSON.parse(trustarc.consentTypeMapping);
 
+
         const getConsentState = (prefCookie) => {
             var consentStates = {};
 
             var noticeBehavior = window.truste.util.readCookie('notice_behavior');
-            var impliedLocation = noticeBehavior && noticeBehavior.includes(trustarc.impliedLocation);
+            var impliedConsentSetting = trustarc.impliedLocation ? trustarc.impliedLocation.split(',') : [];
+            
+           // var impliedLocation = noticeBehavior && trustarc.impliedLocation && noticeBehavior.includes(trustarc.impliedLocation);
+            var impliedLocation = impliedConsentSetting.some(( ics => noticeBehavior.indexOf(ics) > -1));
 
             for (const consentType in consentTypesMapped) {
                 var id = parseInt(consentTypesMapped[consentType].trustarc_category_id, 10);
-
-                if (prefCookie && !prefCookie.includes(0)) {
-                    consentStates[consentType] = booleanToConsentStatus(prefCookie.includes(id));
-                } else {
-                    consentStates[consentType] = booleanToConsentStatus(impliedLocation);
+                if(consentType !== "wait_for_update") {
+                    if (prefCookie && !prefCookie.includes(0)) {
+                        consentStates[consentType] = booleanToConsentStatus(prefCookie.includes(id));
+                    } else {
+                        consentStates[consentType] = booleanToConsentStatus(impliedLocation);
+                    }
                 }
             }
 

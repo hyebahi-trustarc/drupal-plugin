@@ -149,6 +149,21 @@ class TrustarcSettingsForm extends ConfigFormBase {
     ];
 
     // GA Measurement ID (Conditional)
+    $form['cmp_ga_implied_location'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t("Implied Location (Opt-Out experience):"),
+      '#description' => $this->t("The notice_behavior likely refers to a configuration or setting that determines how your application should behave based on the user''s geographic location. This could be used to comply with different privacy laws and regulations that vary by region.
+                                            <br>For example:<br>
+                                                    Opt-in: Users must explicitly consent to data collection.<br>
+                                                    Opt-out: Data collection is allowed until the user opts out.</span>"),
+      '#default_value' => $config->get('cmp_ga_implied_location'),
+      '#states' => [
+        'visible' => [
+          ':input[name="cmp_google_consent_mode"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
+    // GA Measurement ID (Conditional)
     $form['cmp_ga_measurement_id'] = [
       '#type' => 'textfield',
       '#title' => $this->t('GA Measurement ID'),
@@ -216,11 +231,11 @@ class TrustarcSettingsForm extends ConfigFormBase {
 
     $consent_types = [ // Google Consent Mode v2 consent types
       'ad_storage' => 'Ad Storage',
-      'analytics_storage' => 'Analytics Storage',
       'ad_user_data' => 'Ad User Data',
       'ad_personalization' => 'Ad Personalization',
-      'functionality_storage' => 'Functionality Storage',
       'personalization_storage' => 'Personalization Storage',
+      'analytics_storage' => 'Analytics Storage',
+      'functionality_storage' => 'Functionality Storage',
       'security_storage' => 'Security Storage',
       'wait_for_update' => 'Wait for Update',
     ];
@@ -233,7 +248,7 @@ class TrustarcSettingsForm extends ConfigFormBase {
         'trustarc_category_id' => [
           '#type' => 'number',
           '#attributes' => ['class' => ['trustarc-category-id']],
-          '#default_value' => $config->get('cmp_consent_type_mapping')[$key] ?? '',
+          '#default_value' => $key === 'wait_for_update' ? ($config->get('cmp_consent_type_mapping')[$key] ?? 500) : ($config->get('cmp_consent_type_mapping')[$key] ?? ''),
         ],
         '#states' => [
           'required' => [
@@ -265,6 +280,7 @@ class TrustarcSettingsForm extends ConfigFormBase {
         ->set('cmp_google_consent_mode', $values['cmp_google_consent_mode'])
         ->set('cmp_ga_measurement_id', $values['cmp_ga_measurement_id'])
         ->set('cmp_ads_data_redaction', $values['cmp_ads_data_redaction'])
+        ->set('cmp_ga_implied_location', $values['cmp_ga_implied_location'])
         ->set('cmp_url_passthrough', $values['cmp_url_passthrough'])
         ->set('cmp_consent_type_mapping', $values['cmp_consent_type_mapping'])
         ->save();
