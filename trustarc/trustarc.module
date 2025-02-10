@@ -48,10 +48,113 @@ function trustarc_page_attachments_alter(array &$page) {
     ],
   ];
 
+  // Ensure 'html_head' array exists
+  if (!isset($page['#attached']['html_head'])) {
+    $page['#attached']['html_head'] = [];
+  }
 
+  // Attach the TrustArc script for CMP
+  array_unshift($page['#attached']['html_head'], [$trustarc_script, 'trustarc_script']);
+
+  // Check if Google Consent Mode is enabled
+  if ($config->get('cmp_google_consent_mode')) {
+    // Build the JavaScript dynamically with the logic for Google Consent Mode
+    $googleConsentMode = $config->get('cmp_google_consent_mode');
+    $gaMeasurementId = $config->get('cmp_ga_measurement_id');
+    $adsDataRedaction = $config->get('cmp_ads_data_redaction');
+    $urlPassthrough = $config->get('cmp_url_passthrough');
+    $consentTypeMapping = $config->get('cmp_consent_type_mapping');
+    $waitForUpdate = $config->get('cmp_wait_for_update');
+
+    // Replace settings.trustarc values with hardcoded values from the config
+    $js_content = "
+      // Ensure that the script runs only on the page where Google Consent Mode is enabled.
+      if ($googleConsentMode) {
+        window.dataLayer = window.dataLayer || [];
+        const dataLayer = window.dataLayer || [];
+
+        function gtag() { dataLayer.push(arguments); }
+
+        // Google Consent Mode integration
+        gtag('js', new Date());
+        gtag('set', 'developer_id.dNTIxZG', true);
+
+        // Conditionally set Google Analytics if enabled
+        if ('$gaMeasurementId') {
+          gtag('config', '$gaMeasurementId');
+        }
+
+        // Additional Google Consent Mode options (Data Redaction, URL Passthrough)
+        gtag('set', 'ads_data_redaction', $adsDataRedaction);
+        gtag('set', 'url_passthrough', $urlPassthrough);
+
+        const consentTypesMapped = $consentTypeMapping || [];
+
+        // Consent state mapping
+        const ConsentType = {
+          DENIED: 'denied',
+          GRANTED: 'granted',
+        };
+
+        // Refactored to use a traditional function instead of arrow function
+        function booleanToConsentStatus(boolean) {
+          return boolean ? ConsentType.GRANTED : ConsentType.DENIED;
+        }
+
+        const getConsentState = function(prefCookie) {
+          let consentStates = {};
+
+          for (const consentType in consentTypesMapped) {
+            const id = consentTypesMapped[consentType];
+            consentStates[consentType] = booleanToConsentStatus(prefCookie.includes(id));
+          }
+
+          consentStates['wait_for_update'] = '$waitForUpdate';  // Ensure the correct condition
+
+          return consentStates;
+        };
+
+        // Handle the consent decision
+        function handleConsentDecision(consent) {
+          const consentStates = getConsentState(consent);
+          gtag('consent', 'default', consentStates);
+        }
+
+        // Listening for cookie preferences message
+        window.addEventListener('message', function(event) {
+          let eventDataJson = null;
+          try {
+            eventDataJson = JSON.parse(event.data);
+          } catch (error) {
+            console.error('Invalid message data:', error);
+          }
+
+          if (eventDataJson.source === 'preference_manager') {
+            if (eventDataJson.message === 'submit_preferences') {
+              setTimeout(function() {
+                // Simulate getting consent decision
+                const consentDecision = {};  // Get this from TrustArc API or your consent manager.
+                handleConsentDecision(consentDecision);
+              }, 500);
+            }
+          }
+        }, false);
+      }
+    ";
+
+    // Inject the Google Consent Mode JavaScript directly into the page
+    $google_consent_script = [
+      '#type' => 'html_tag',
+      '#tag' => 'script',
+      '#value' => $js_content,
+    ];
+
+    // Attach the Google Consent Mode script
+    $page['#attached']['html_head'][] = [$google_consent_script, 'trustarc_google_consent_mode_script'];
+  }
+
+  // Inject the TrustArc div if preferences are enabled
   if (!empty($cmp_preferences)) {
-
-    // JavaScript to dynamically inject the div in the specified location
     $trustarc_div_script = [
       '#type' => 'html_tag',
       '#tag' => 'script',
@@ -65,21 +168,11 @@ function trustarc_page_attachments_alter(array &$page) {
            targetElement.appendChild(trustarcDiv);
            console.log('TrustArc div injected into:', targetElement);
           } else {
-            console.warn('TrustArc target element not found:', '$cmp_target_selector');
+            console.warn('TrustArc target element not found:', '$cmp_preferences_selector');
           }
         });
       ",
     ];
-  }
-  // Ensure 'html_head' array exists
-  if (!isset($page['#attached']['html_head'])) {
-    $page['#attached']['html_head'] = [];
-  }
-
-  array_unshift($page['#attached']['html_head'], [$trustarc_script, 'trustarc_script']);
-
-
-  if (!empty($cmp_preferences)) {
     array_unshift($page['#attached']['html_head'], [$trustarc_div_script, 'trustarc_div_script']);
   }
 }
