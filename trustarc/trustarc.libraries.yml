@@ -5,3 +5,4 @@ trustarc_js:
   dependencies:
     - core/drupal
     - core/drupalSettings
+    - core/once

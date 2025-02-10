@@ -179,52 +179,38 @@ class TrustarcSettingsForm extends ConfigFormBase {
           ':input[name="cmp_google_consent_mode"]' => ['checked' => TRUE],
         ],
       ],
-    ];
+        ];
 
       $consent_types = [ // Google Consent Mode v2 consent types
           'ad_storage' => 'Ad Storage',
           'analytics_storage' => 'Analytics Storage',
+          'ad_user_data' => 'Ad User Data',
+          'ad_personalization' => 'Ad Personalization',
           'functionality_storage' => 'Functionality Storage',
           'personalization_storage' => 'Personalization Storage',
           'security_storage' => 'Security Storage',
           'wait_for_update' => 'Wait for Update',
       ];
-    $cmp_consent_type_mapping = $config->get('cmp_consent_type_mapping') ?: [];
 
-    $static_rows = [
-      ['google_consent_type' => 'analytics_storage', 'trustarc_category_id' => ''],
-      ['google_consent_type' => 'ad_storage', 'trustarc_category_id' => ''],
-      ['google_consent_type' => 'ad_user_data', 'trustarc_category_id' => ''],
-      ['google_consent_type' => 'ad_personalization', 'trustarc_category_id' => ''],
-      ['google_consent_type' => 'functionality_storage', 'trustarc_category_id' => ''],
-      ['google_consent_type' => 'personalization_storage', 'trustarc_category_id' => ''],
-      ['google_consent_type' => 'security_storage', 'trustarc_category_id' => ''],
-    ];
-
-    $row_count = 0;
-    foreach ($static_rows as $row_data) {
-      $mapping = null;
-      if (isset($cmp_consent_type_mapping[$row_count])) {
-        $mapping = $cmp_consent_type_mapping[$row_count];
-      }
-
-      $form['google_consent_mode_settings']['cmp_consent_type_mapping'][$row_count]['google_consent_type'] = [
-        '#markup' => $row_data['google_consent_type'],
-      ];
-      $form['google_consent_mode_settings']['cmp_consent_type_mapping'][$row_count]['trustarc_category_id'] = [
-        '#type' => 'number',
-        '#default_value' => $mapping ? $mapping['trustarc_category_id'] : '',
-        '#attributes' => ['class' => ['trustarc-category-id']],
-        '#name' => 'cmp_consent_type_mapping[' . $row_count . '][trustarc_category_id]',
-        '#states' => [
+      foreach ($consent_types as $key => $label) {
+        $form['google_consent_mode_settings']['cmp_consent_type_mapping'][$key] = [
+          'google_consent_type' => [
+          '#markup' => $label,
+          ],
+          'trustarc_category_id' => [
+          '#type' => 'number',
+          '#attributes' => ['class' => ['trustarc-category-id']],
+          '#default_value' => $config->get('cmp_consent_type_mapping')[$key] ?? '',
+          ],
+          '#states' => [
           'required' => [
             ':input[name="cmp_google_consent_mode"]' => ['checked' => TRUE],
           ],
         ],
-      ];
+        ];
+      }
+   
 
-      $row_count++;
-    }
       $form['#attached']['library'][] = 'trustarc/trustarc_admin'; // Attach the library
   
       return parent::buildForm($form, $form_state);
