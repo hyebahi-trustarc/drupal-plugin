@@ -9,16 +9,43 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
+/**
+ * Class TrustarcSettingsForm.
+ *
+ * Provides a settings form for TrustArc module.
+ */
 class TrustarcSettingsForm extends ConfigFormBase {
 
+  /**
+   * The config factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
   protected $configFactory;
+
+  /**
+   * The logger service.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
   protected $logger;
 
+  /**
+   * Constructs a TrustarcSettingsForm object.
+   *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   The logger service.
+   */
   public function __construct(ConfigFactoryInterface $config_factory, LoggerInterface $logger) {
     $this->configFactory = $config_factory;
     $this->logger = $logger;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
@@ -26,14 +53,23 @@ class TrustarcSettingsForm extends ConfigFormBase {
     );
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getFormId() {
     return 'trustarc_settings_form';
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function getEditableConfigNames() {
     return ['trustarc.settings'];
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->configFactory->get('trustarc.settings');
 
@@ -71,10 +107,9 @@ class TrustarcSettingsForm extends ConfigFormBase {
       '#type' => 'textfield',  // Use textarea for flexibility
       '#title' => $this->t('Banner Container'),
       '#description' => $this->t('The ID of the HTML element where the CMP banner will be displayed, or the complete HTML code.'),
-      '#default_value' => $config->get('cmp_banner') ?: '<div id="consent_blackbar"></div>',
-      '#markup' => $config->get('cmp_banner') ?: '<div id="consent_blackbar"></div>',
+      '#default_value' => $config->get('cmp_banner') ?: 'consent_blackbar',
+      '#markup' => $config->get('cmp_banner') ?: 'consent_blackbar',
     ];
-
 
     // Example for Checkbox (cmp_preferences):
     $form['cmp_preferences'] = [
@@ -84,7 +119,6 @@ class TrustarcSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('cmp_preferences'),
     ];
 
-    
     // Query Selector for Preferences Link
     $form['cmp_preferences_selector'] = [
       '#type' => 'textfield',
@@ -127,42 +161,41 @@ class TrustarcSettingsForm extends ConfigFormBase {
       ],
     ];
 
-
     // Ads Data Redaction (Conditional)
     $form['cmp_ads_data_redaction'] = [
-        '#type' => 'checkbox',
-        '#title' => $this->t('Enable Data Redaction'),
-        '#description' => $this->t('When enabled, Google Analytics will redact user data when consent for analytics is not granted. This helps protect user privacy.'),
-        '#default_value' => $config->get('cmp_ads_data_redaction'),
-        '#states' => [
-            'visible' => [
-              ':input[name="cmp_google_consent_mode"]' => ['checked' => TRUE],
-            ],
-          ],
-      ];
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable Data Redaction'),
+      '#description' => $this->t('When enabled, Google Analytics will redact user data when consent for analytics is not granted. This helps protect user privacy.'),
+      '#default_value' => $config->get('cmp_ads_data_redaction'),
+      '#states' => [
+        'visible' => [
+          ':input[name="cmp_google_consent_mode"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
 
-      // Enable URL Passthrough (Conditional)
+    // Enable URL Passthrough (Conditional)
     $form['cmp_url_passthrough'] = [
-        '#type' => 'checkbox',
-        '#title' => $this->t('Enable URL Passthrough'),
-        '#description' => $this->t('When enabled, URL parameters will be passed through to Google Analytics even when consent is not granted. This can be useful for campaign tracking.'),
-        '#default_value' => $config->get('cmp_url_passthrough'),
-        '#states' => [
-            'visible' => [
-              ':input[name="cmp_google_consent_mode"]' => ['checked' => TRUE],
-            ],
-          ],
-      ];
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable URL Passthrough'),
+      '#description' => $this->t('When enabled, URL parameters will be passed through to Google Analytics even when consent is not granted. This can be useful for campaign tracking.'),
+      '#default_value' => $config->get('cmp_url_passthrough'),
+      '#states' => [
+        'visible' => [
+          ':input[name="cmp_google_consent_mode"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
 
-      $form['google_consent_mode_settings'] = [
-        '#type' => 'fieldset',
-        '#title' => $this->t('Google Consent Mode Settings'),
-        '#collapsible' => TRUE,
-        '#collapsed' => FALSE,
-      ];
+    $form['google_consent_mode_settings'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Google Consent Mode Settings'),
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+    ];
 
-      // Consent Type Mapping (Table) - STATIC
-      $form['google_consent_mode_settings']['cmp_consent_type_mapping'] = [
+    // Consent Type Mapping (Table) - STATIC
+    $form['google_consent_mode_settings']['cmp_consent_type_mapping'] = [
       '#type' => 'table',
       '#title' => $this->t('Consent Type Mapping'),
       '#description' => $this->t('Map TrustArc consent categories to Google Consent Mode v2 consent types.'),
@@ -179,45 +212,47 @@ class TrustarcSettingsForm extends ConfigFormBase {
           ':input[name="cmp_google_consent_mode"]' => ['checked' => TRUE],
         ],
       ],
-        ];
+    ];
 
-      $consent_types = [ // Google Consent Mode v2 consent types
-          'ad_storage' => 'Ad Storage',
-          'analytics_storage' => 'Analytics Storage',
-          'ad_user_data' => 'Ad User Data',
-          'ad_personalization' => 'Ad Personalization',
-          'functionality_storage' => 'Functionality Storage',
-          'personalization_storage' => 'Personalization Storage',
-          'security_storage' => 'Security Storage',
-          'wait_for_update' => 'Wait for Update',
-      ];
+    $consent_types = [ // Google Consent Mode v2 consent types
+      'ad_storage' => 'Ad Storage',
+      'analytics_storage' => 'Analytics Storage',
+      'ad_user_data' => 'Ad User Data',
+      'ad_personalization' => 'Ad Personalization',
+      'functionality_storage' => 'Functionality Storage',
+      'personalization_storage' => 'Personalization Storage',
+      'security_storage' => 'Security Storage',
+      'wait_for_update' => 'Wait for Update',
+    ];
 
-      foreach ($consent_types as $key => $label) {
-        $form['google_consent_mode_settings']['cmp_consent_type_mapping'][$key] = [
-          'google_consent_type' => [
+    foreach ($consent_types as $key => $label) {
+      $form['google_consent_mode_settings']['cmp_consent_type_mapping'][$key] = [
+        'google_consent_type' => [
           '#markup' => $label,
-          ],
-          'trustarc_category_id' => [
+        ],
+        'trustarc_category_id' => [
           '#type' => 'number',
           '#attributes' => ['class' => ['trustarc-category-id']],
           '#default_value' => $config->get('cmp_consent_type_mapping')[$key] ?? '',
-          ],
-          '#states' => [
+        ],
+        '#states' => [
           'required' => [
             ':input[name="cmp_google_consent_mode"]' => ['checked' => TRUE],
           ],
         ],
-        ];
-      }
-   
-
-      $form['#attached']['library'][] = 'trustarc/trustarc_admin'; // Attach the library
-  
-      return parent::buildForm($form, $form_state);
+      ];
     }
-  
-    public function submitForm(array &$form, FormStateInterface $form_state) {
-      try {
+
+    $form['#attached']['library'][] = 'trustarc/trustarc_admin'; // Attach the library
+
+    return parent::buildForm($form, $form_state);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    try {
       $values = $form_state->getValues();
       $this->configFactory->getEditable('trustarc.settings')
         ->set('cmp_version', $values['cmp_version'])
@@ -238,10 +273,10 @@ class TrustarcSettingsForm extends ConfigFormBase {
       $this->logger->info('TrustArc settings form submitted with values: @values', ['@values' => json_encode($values)]);
 
       parent::submitForm($form, $form_state);
-      } catch (\Exception $e) {
+    } catch (\Exception $e) {
       // Log the error
       $this->logger->error('Error submitting TrustArc settings form: @message', ['@message' => $e->getMessage()]);
       \Drupal::messenger()->addError($this->t('An error occurred while saving the settings: @message', ['@message' => $e->getMessage()]));
-      }
     }
   }
+}

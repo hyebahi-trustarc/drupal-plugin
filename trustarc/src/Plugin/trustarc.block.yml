@@ -1,5 +1,4 @@
 trustarc_js_deploy_block:
   id: trustarc_js_deploy_block
   label: 'TrustArc JS Deploy'
-  category: Custom  # Or a more appropriate category
-  # Add other block properties as needed (e.g., admin_label)
+  category: Custom  
