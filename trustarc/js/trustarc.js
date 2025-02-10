@@ -48,7 +48,7 @@
             var impliedLocation = noticeBehavior && noticeBehavior.includes(trustarc.impliedLocation);
   
             for (const consentType in consentTypesMapped) {
-                var id = consentTypesMapped[consentType].trustarc_category_id;
+                var id = parseInt(consentTypesMapped[consentType].trustarc_category_id, 10);
   
                 if (prefCookie && !prefCookie.includes(0)) {
                     consentStates[consentType] = booleanToConsentStatus(prefCookie.includes(id));
@@ -57,7 +57,9 @@
                 }
             }
   
-            consentStates['wait_for_update'] = trustarc.waitForUpdate === 'true';
+            if (consentTypesMapped && consentTypesMapped["wait_for_update"].trustarc_category_id) {
+                consentStates['wait_for_update'] = parseInt(consentTypesMapped["wait_for_update"].trustarc_category_id, 10);
+            }
             return consentStates;
         };
   

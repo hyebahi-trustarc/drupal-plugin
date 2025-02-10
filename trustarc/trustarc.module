@@ -18,6 +18,7 @@ function trustarc_page_attachments_alter(array &$page) {
   $cmp_script_params = $config->get('cmp_script_params');
   $cmp_preferences_selector = $config->get('cmp_preferences_selector');
   $cmp_preferences = $config->get('cmp_preferences');
+  $cmp_banner = $config->get('cmp_banner');
 
   
   if (empty($cmp_script)) {
@@ -56,32 +57,6 @@ function trustarc_page_attachments_alter(array &$page) {
   ];
 
 
-  if (!empty($cmp_preferences)) {
-
-    $cmp_preferences_selector = htmlspecialchars($cmp_preferences_selector ? $cmp_preferences_selector : 'body', ENT_QUOTES, 'UTF-8');
-    // JavaScript to dynamically inject the div in the specified location
-    $trustarc_div_script = [
-      '#type' => 'html_tag',
-      '#tag' => 'script',
-      '#attributes' => [
-      'type' => 'text/javascript',
-      ],
-      '#value' => "
-      document.addEventListener('DOMContentLoaded', function() {
-        var targetElement = document.querySelector('$cmp_preferences_selector') || document.body;
-        if (targetElement) {
-        var trustarcDiv = document.createElement('div');
-        trustarcDiv.id = 'teconsent';
-        trustarcDiv.className = 'trustarc-container';
-        targetElement.appendChild(trustarcDiv);
-        console.log('TrustArc div injected into:', targetElement);
-        } else {
-        console.warn('TrustArc target element not found:', '$cmp_preferences_selector');
-        }
-      });
-      ",
-    ];
-  }
   // Ensure 'html_head' array exists
   if (!isset($page['#attached']['html_head'])) {
     $page['#attached']['html_head'] = [];
@@ -89,10 +64,6 @@ function trustarc_page_attachments_alter(array &$page) {
 
   array_unshift($page['#attached']['html_head'], [$trustarc_script, 'trustarc_script']);
 
-
-  if (!empty($cmp_preferences)) {
-  //  array_unshift($page['#attached']['html_head'], [$trustarc_div_script, 'trustarc_div_script']);
-  }
 
 }
 
@@ -113,8 +84,8 @@ function trustarc_preprocess_html(array &$variables) {
   $cmp_ads_data_redaction = $config->get('cmp_ads_data_redaction');
   $cmp_url_passthrough = $config->get('cmp_url_passthrough');
   $cmp_consent_type_mapping = $config->get('cmp_consent_type_mapping');
-  $wait_for_update = isset($cmp_consent_type_mapping['wait_for_update']) ? $cmp_consent_type_mapping['wait_for_update'] : NULL;
-  unset($cmp_consent_type_mapping['wait_for_update']);
+  //$wait_for_update = isset($cmp_consent_type_mapping['wait_for_update']) ? $cmp_consent_type_mapping['wait_for_update']['trustarc_category_id'] : NULL;
+  //unset($cmp_consent_type_mapping['wait_for_update']);
 
   // Attach the library only once per page render.
   if (empty($variables['#attached']['library']['trustarc/trustarc_js'])) {
@@ -132,8 +103,24 @@ function trustarc_preprocess_html(array &$variables) {
       'gaMeasurementID' => $cmp_ga_measurement_id,
       'adsDataRedaction' => $cmp_ads_data_redaction,
       'URLPassthrough' => $cmp_url_passthrough,
-      'waitForUpdate' => $wait_for_update,
-      'consentTypeMapping' => \Drupal\Component\Serialization\Json::encode($cmp_consent_type_mapping),
+      'consentTypeMapping' => \Drupal\Component\Serialization\Json::encode($cmp_consent_type_mapping, JSON_NUMERIC_CHECK),
     ];
+  }
+
+  
+  if (!empty($cmp_banner)) {
+    // HTML to dynamically inject the div in the specified location
+    
+    // Add "Hello World" to the body
+    $variables['page']['#attached']['html_head'][] = [
+      [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => '',
+        '#attributes' => ['id' => [$cmp_banner]],
+      ],
+      'te_consent_banner',
+    ];
+
   }
 }
