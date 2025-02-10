@@ -58,23 +58,27 @@ function trustarc_page_attachments_alter(array &$page) {
 
   if (!empty($cmp_preferences)) {
 
+    $cmp_preferences_selector = htmlspecialchars($cmp_preferences_selector ? $cmp_preferences_selector : 'body', ENT_QUOTES, 'UTF-8');
     // JavaScript to dynamically inject the div in the specified location
     $trustarc_div_script = [
       '#type' => 'html_tag',
       '#tag' => 'script',
+      '#attributes' => [
+      'type' => 'text/javascript',
+      ],
       '#value' => "
-        document.addEventListener('DOMContentLoaded', function() {
-          var targetElement = document.querySelector('$cmp_preferences_selector');
-          if (targetElement) {
-            var trustarcDiv = document.createElement('div');
-           trustarcDiv.id = 'teconsent';
-           trustarcDiv.className = 'trustarc-container';
-           targetElement.appendChild(trustarcDiv);
-           console.log('TrustArc div injected into:', targetElement);
-          } else {
-            console.warn('TrustArc target element not found:', '$cmp_preferences_selector');
-          }
-        });
+      document.addEventListener('DOMContentLoaded', function() {
+        var targetElement = document.querySelector('$cmp_preferences_selector') || document.body;
+        if (targetElement) {
+        var trustarcDiv = document.createElement('div');
+        trustarcDiv.id = 'teconsent';
+        trustarcDiv.className = 'trustarc-container';
+        targetElement.appendChild(trustarcDiv);
+        console.log('TrustArc div injected into:', targetElement);
+        } else {
+        console.warn('TrustArc target element not found:', '$cmp_preferences_selector');
+        }
+      });
       ",
     ];
   }
@@ -87,15 +91,15 @@ function trustarc_page_attachments_alter(array &$page) {
 
 
   if (!empty($cmp_preferences)) {
-    array_unshift($page['#attached']['html_head'], [$trustarc_div_script, 'trustarc_div_script']);
+  //  array_unshift($page['#attached']['html_head'], [$trustarc_div_script, 'trustarc_div_script']);
   }
 
-
 }
+
 /**
- * Implements hook_page_attachments().
+ * Implements hook_preprocess_html().
  */
-function trustarc_page_attachments(array &$attachments) {
+function trustarc_preprocess_html(array &$variables) {
   $config = \Drupal::config('trustarc.settings');
   $cmp_version = $config->get('cmp_version', 'advanced');
   $cmp_script = $config->get('cmp_script');
@@ -109,22 +113,27 @@ function trustarc_page_attachments(array &$attachments) {
   $cmp_ads_data_redaction = $config->get('cmp_ads_data_redaction');
   $cmp_url_passthrough = $config->get('cmp_url_passthrough');
   $cmp_consent_type_mapping = $config->get('cmp_consent_type_mapping');
-  $name = $cmp_script ?: 'Default Name';
+  $wait_for_update = isset($cmp_consent_type_mapping['wait_for_update']) ? $cmp_consent_type_mapping['wait_for_update'] : NULL;
+  unset($cmp_consent_type_mapping['wait_for_update']);
 
-  $attachments['#attached']['library'][] = 'trustarc/trustarc_js';
-  $attachments['#attached']['drupalSettings']['trustarc'] = [
-    'name' => $name,
-    'cmp_version' => $cmp_version,
-    'cmp_script' => $cmp_script,
-    'cmp_script_params' => $cmp_script_params,
-    'cmp_preferences_selector' => $cmp_preferences_selector,
-    'cmp_preferences' => $cmp_preferences,
-    'cmp_banner' => $cmp_banner,
-    'cmp_standard_event_listener' => $cmp_standard_event_listener,
-    'cmp_google_consent_mode' => $cmp_google_consent_mode,
-    'cmp_ga_measurement_id' => $cmp_ga_measurement_id,
-    'cmp_ads_data_redaction' => $cmp_ads_data_redaction,
-    'cmp_url_passthrough' => $cmp_url_passthrough,
-    'cmp_consent_type_mapping' => $cmp_consent_type_mapping,
-  ];
+  // Attach the library only once per page render.
+  if (empty($variables['#attached']['library']['trustarc/trustarc_js'])) {
+    $variables['#attached']['library']['trustarc/trustarc_js'] = 'trustarc/trustarc_js';
+
+    $variables['#attached']['drupalSettings']['trustarc'] = [
+      'Version' => $cmp_version,
+      'script' => $cmp_script,
+      'scriptParams' => $cmp_script_params,
+      'preferencesSelector' => $cmp_preferences_selector,
+      'preferences' => $cmp_preferences,
+      'banner' => $cmp_banner,
+      'standardEventListener' => $cmp_standard_event_listener,
+      'gcmEnabled' => $cmp_google_consent_mode,
+      'gaMeasurementID' => $cmp_ga_measurement_id,
+      'adsDataRedaction' => $cmp_ads_data_redaction,
+      'URLPassthrough' => $cmp_url_passthrough,
+      'waitForUpdate' => $wait_for_update,
+      'consentTypeMapping' => \Drupal\Component\Serialization\Json::encode($cmp_consent_type_mapping),
+    ];
+  }
 }

@@ -2,7 +2,7 @@
  (function ($, Drupal, once) {
     'use strict';
   
-   // var $window = $(window);
+    var $window = $(window);
 
    Drupal.trustarc = {}
 
@@ -141,17 +141,19 @@
         }
     }, false);  
 
+    
     Drupal.trustarc.loadCookieConsent = function() {
-        var targetElement = document.querySelector(trustarc.preferencesSelector) || document.body;
-        if (targetElement) {
-        var trustarcDiv = document.createElement('div');
-        trustarcDiv.id = 'teconsent';
-        trustarcDiv.className = 'trustarc-container';
-        targetElement.appendChild(trustarcDiv);
-        console.log('TrustArc div injected into:', targetElement);
-        } else {
-        console.warn('TrustArc target element not found:', '$cmp_preferences_selector');
-        }
-      };
+            var targetElement = document.querySelector(trustarc.preferencesSelector) || document.body;
+            if (targetElement) {
+                var trustarcDiv = document.createElement('div');
+                trustarcDiv.id = 'teconsent';
+                trustarcDiv.className = 'trustarc-container';
+                targetElement.appendChild(trustarcDiv);
+            }
+        };
+
+  $window.on('load', function () {
+    Drupal.trustarc.loadCookieConsent();
+  });
     
   })(jQuery, Drupal, once);
