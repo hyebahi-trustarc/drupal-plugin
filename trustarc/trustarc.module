@@ -4,6 +4,11 @@ use Drupal\Core\Cache\Cache;
 use Drupal\filter\FilterPluginCollection;
 use Drupal\Core\Template\Attribute;
 
+
+
+/**
+ * Implements hook_page_attachments_alter().
+ */
 function trustarc_page_attachments_alter(array &$page) {
   \Drupal::logger('trustarc')->notice('trustarc_page_attachments_alter() executed');
 
@@ -13,6 +18,8 @@ function trustarc_page_attachments_alter(array &$page) {
   $cmp_script_params = $config->get('cmp_script_params');
   $cmp_preferences_selector = $config->get('cmp_preferences_selector');
   $cmp_preferences = $config->get('cmp_preferences');
+
+  
   if (empty($cmp_script)) {
     return;
   }
@@ -65,7 +72,7 @@ function trustarc_page_attachments_alter(array &$page) {
            targetElement.appendChild(trustarcDiv);
            console.log('TrustArc div injected into:', targetElement);
           } else {
-            console.warn('TrustArc target element not found:', '$cmp_target_selector');
+            console.warn('TrustArc target element not found:', '$cmp_preferences_selector');
           }
         });
       ",
@@ -82,44 +89,17 @@ function trustarc_page_attachments_alter(array &$page) {
   if (!empty($cmp_preferences)) {
     array_unshift($page['#attached']['html_head'], [$trustarc_div_script, 'trustarc_div_script']);
   }
-}
 
+
+}
 /**
- * Injects a TrustArc banner div.
+ * Implements hook_page_attachments().
  */
-function trustarc_page_top(array &$page_top) {
+function trustarc_page_attachments(array &$attachments) {
   $config = \Drupal::config('trustarc.settings');
-  $cmp_banner = $config->get('cmp_banner', 'consent_blackbar'); // Default ID
-
-  if (!empty($cmp_banner)) {
-    $page_top['trustarc'] = [
-      '#type' => 'html_tag',
-      '#tag' => 'div',
-      '#attributes' => [
-        'id' => $cmp_banner
-      ],
-      '#value' => '',
-    ];
-  }
+  $name = $config->get('cmp_script') ?: 'Default Name';
+  $attachments['#attached']['library'][] = 'trustarc/trustarc_js';
+  $attachments['#attached']['drupalSettings']['trustarc'] = ['name' => $name];
 }
 
-/**
- * Implements hook_page_top_alter().
- */
-function trustarc_page_top_alter(array &$page_top) {
-  trustarc_page_top($page_top);
-}
-
-/**
- * Implements hook_node_view().
- */
-function trustarc_node_view(array &$build) {
-}
-
-/**
- * Implements hook_node_view_alter().
- */
-function trustarc_node_view_alter(array &$build) {
-  trustarc_node_view($build);
-}
-
+//

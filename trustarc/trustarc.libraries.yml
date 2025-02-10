@@ -1,3 +1,7 @@
 trustarc_js:
+  version: 1.x
   js:
-    js/trustarc_js.js: {}
+    js/trustarc.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
