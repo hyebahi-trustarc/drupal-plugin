@@ -102,6 +102,13 @@ function trustarc_page_attachments(array &$attachments) {
   $cmp_script_params = $config->get('cmp_script_params');
   $cmp_preferences_selector = $config->get('cmp_preferences_selector');
   $cmp_preferences = $config->get('cmp_preferences');
+  $cmp_banner = $config->get('cmp_banner');
+  $cmp_standard_event_listener = $config->get('cmp_standard_event_listener');
+  $cmp_google_consent_mode = $config->get('cmp_google_consent_mode');
+  $cmp_ga_measurement_id = $config->get('cmp_ga_measurement_id');
+  $cmp_ads_data_redaction = $config->get('cmp_ads_data_redaction');
+  $cmp_url_passthrough = $config->get('cmp_url_passthrough');
+  $cmp_consent_type_mapping = $config->get('cmp_consent_type_mapping');
   $name = $cmp_script ?: 'Default Name';
 
   $attachments['#attached']['library'][] = 'trustarc/trustarc_js';
@@ -112,15 +119,12 @@ function trustarc_page_attachments(array &$attachments) {
     'cmp_script_params' => $cmp_script_params,
     'cmp_preferences_selector' => $cmp_preferences_selector,
     'cmp_preferences' => $cmp_preferences,
-    'gcmEnabled' => $config->get('gcm_enabled'),
-    'gaMeasurementId' => $config->get('ga_measurement_id'),
-    'dataRedaction' => $config->get('data_redaction'),
-    'urlPassthrough' => $config->get('url_passthrough'),
-    'googleConsentFields' => $config->get('google_consent_fields'),
-    'waitForUpdate' => $config->get('wait_for_update'),
-    'wpConsentApiEnabled' => $config->get('wp_consent_api_enabled'),
-    'wpConsentApiMapping' => $config->get('wp_consent_api_mapping'),
-    'impliedLocation' => $config->get('implied_location'),
-    'standardEventListener' => $config->get('standard_event_listener'),
+    'cmp_banner' => $cmp_banner,
+    'cmp_standard_event_listener' => $cmp_standard_event_listener,
+    'cmp_google_consent_mode' => $cmp_google_consent_mode,
+    'cmp_ga_measurement_id' => $cmp_ga_measurement_id,
+    'cmp_ads_data_redaction' => $cmp_ads_data_redaction,
+    'cmp_url_passthrough' => $cmp_url_passthrough,
+    'cmp_consent_type_mapping' => $cmp_consent_type_mapping,
   ];
 }
