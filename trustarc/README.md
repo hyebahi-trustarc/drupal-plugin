@@ -88,4 +88,5 @@ To ensure compliance, verify that:
 
 Current maintainers:
 
-* Haissam Yebahi - [haissam-yebahi](https://www.drupal.org/u/haissam-yebahi)
+* Haissam Yebahi - [hyebahi](https://www.drupal.org/u/hyebahi)
+* Felipe Brito - [felipenbrito](https://www.drupal.org/u/felipenbrito)
